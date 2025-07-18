@@ -30,6 +30,7 @@ export default function Home() {
     pollResults, 
     activeSessions,
     responseCount,
+    chatMessages,
     sendMessage 
   } = useWebSocket(userRole, studentName);
 
@@ -135,7 +136,12 @@ export default function Home() {
       </main>
 
       {/* Floating Chat */}
-      <FloatingChat />
+      <FloatingChat 
+        userRole={userRole} 
+        userName={userRole === "teacher" ? "Teacher" : studentName} 
+        sendMessage={sendMessage}
+        messages={chatMessages}
+      />
     </div>
   );
 }

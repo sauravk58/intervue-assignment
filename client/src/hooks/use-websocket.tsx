@@ -28,6 +28,14 @@ interface Session {
   isActive: boolean;
 }
 
+interface ChatMessage {
+  id: string;
+  sender: string;
+  message: string;
+  timestamp: Date;
+  role: 'teacher' | 'student';
+}
+
 export function useWebSocket(userRole: "teacher" | "student" | null, studentName: string) {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -35,6 +43,7 @@ export function useWebSocket(userRole: "teacher" | "student" | null, studentName
   const [pollResults, setPollResults] = useState<PollResults | null>(null);
   const [activeSessions, setActiveSessions] = useState<Session[]>([]);
   const [responseCount, setResponseCount] = useState(0);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const { toast } = useToast();
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -104,6 +113,17 @@ export function useWebSocket(userRole: "teacher" | "student" | null, studentName
             case 'activeSessionsUpdate':
               setActiveSessions(data.sessions);
               break;
+              
+            case 'chatMessage':
+              const newMessage: ChatMessage = {
+                id: Date.now().toString(),
+                sender: data.sender,
+                message: data.message,
+                timestamp: new Date(data.timestamp),
+                role: data.role
+              };
+              setChatMessages(prev => [...prev, newMessage]);
+              break;
           }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
@@ -153,6 +173,7 @@ export function useWebSocket(userRole: "teacher" | "student" | null, studentName
     pollResults,
     activeSessions,
     responseCount,
+    chatMessages,
     sendMessage,
   };
 }

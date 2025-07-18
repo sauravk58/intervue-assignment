@@ -59,9 +59,11 @@ export class MemStorage implements IStorage {
   async createPoll(insertPoll: InsertPoll): Promise<Poll> {
     const id = this.currentPollId++;
     const poll: Poll = {
-      ...insertPoll,
       id,
+      question: insertPoll.question,
+      options: insertPoll.options as { id: string; text: string; isCorrect: boolean; }[],
       isActive: true,
+      duration: insertPoll.duration ?? 60,
       createdAt: new Date(),
       endedAt: null,
     };

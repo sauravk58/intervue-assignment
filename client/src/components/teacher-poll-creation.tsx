@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Clock, Plus, History } from "lucide-react";
+import { Clock, Plus, History, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -92,6 +92,17 @@ export default function TeacherPollCreation({
     onPollCreated();
   };
 
+  const createSamplePoll = () => {
+    setQuestion("Which planet is known as the Red Planet?");
+    setOptions([
+      { id: 'A', text: 'Mars', isCorrect: true },
+      { id: 'B', text: 'Venus', isCorrect: false },
+      { id: 'C', text: 'Jupiter', isCorrect: false },
+      { id: 'D', text: 'Saturn', isCorrect: false },
+    ]);
+    setCorrectAnswer('A');
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <Card className="shadow-sm">
@@ -104,6 +115,10 @@ export default function TeacherPollCreation({
               </p>
             </div>
             <div className="flex items-center space-x-4">
+              <Button variant="outline" onClick={createSamplePoll}>
+                <Zap size={16} className="mr-2" />
+                Quick Sample
+              </Button>
               <Button variant="outline" onClick={onViewHistory}>
                 <History size={16} className="mr-2" />
                 Poll History

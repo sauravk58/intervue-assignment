@@ -106,13 +106,12 @@ export default function LiveResults({
                         {option.percentage}%
                       </span>
                     </div>
-                    <Progress 
-                      value={option.percentage} 
-                      className="h-3"
-                      style={{
-                        '--progress-background': optionColors[index]?.bg.replace('bg-', '') || 'slate-500'
-                      } as React.CSSProperties}
-                    />
+                    <div className="relative h-3 w-full overflow-hidden rounded-full bg-slate-200">
+                      <div 
+                        className={`h-full transition-all duration-300 ${optionColors[index]?.bg || 'bg-slate-500'}`}
+                        style={{ width: `${option.percentage}%` }}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>

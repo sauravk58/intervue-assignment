@@ -116,6 +116,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
             break;
+            
+          case 'chatMessage':
+            // Broadcast chat message to all connected clients
+            broadcastToAll({
+              type: 'chatMessage',
+              sender: data.sender,
+              message: data.message,
+              role: data.role,
+              timestamp: data.timestamp
+            });
+            break;
         }
       } catch (error) {
         console.error('WebSocket error:', error);

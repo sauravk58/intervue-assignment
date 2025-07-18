@@ -63,6 +63,15 @@ export default function RoleSelection({ onRoleSelect }: RoleSelectionProps) {
         <p className="text-sm text-slate-500">
           Select your role to continue to the polling interface
         </p>
+        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h4 className="text-sm font-semibold text-blue-800 mb-2">Test Instructions:</h4>
+          <div className="text-xs text-blue-700 space-y-1">
+            <p>1. First, select "Teacher" role and create a poll using the "Quick Sample" button</p>
+            <p>2. Open a new browser tab/window and select "Student" role</p>
+            <p>3. Enter your name and participate in the poll</p>
+            <p>4. Use the chat feature to communicate between roles</p>
+          </div>
+        </div>
       </div>
     </div>
   );
