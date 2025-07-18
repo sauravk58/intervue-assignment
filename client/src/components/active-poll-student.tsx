@@ -18,8 +18,17 @@ interface Poll {
   duration: number;
 }
 
+interface PollResults {
+  poll: Poll;
+  results: Array<PollOption & { count: number; percentage: number }>;
+  totalResponses: number;
+  correctAnswer: PollOption;
+}
+
 interface ActivePollStudentProps {
   poll: Poll | null;
+  pollResults: PollResults | null;
+  hasSubmitted: boolean;
   onSubmit: (selectedOption: string) => void;
 }
 
@@ -32,7 +41,7 @@ const optionColors = [
   { bg: 'bg-cyan-500', borderColor: 'border-cyan-500/30', hoverBg: 'hover:bg-cyan-50', focusRing: 'focus:ring-cyan-500' },
 ];
 
-export default function ActivePollStudent({ poll, onSubmit }: ActivePollStudentProps) {
+export default function ActivePollStudent({ poll, pollResults, hasSubmitted, onSubmit }: ActivePollStudentProps) {
   const [selectedOption, setSelectedOption] = useState("");
   const [timeLeft, setTimeLeft] = useState(0);
 
@@ -96,45 +105,89 @@ export default function ActivePollStudent({ poll, onSubmit }: ActivePollStudentP
             {poll.question}
           </h3>
           
-          <form onSubmit={handleSubmit}>
-            <RadioGroup value={selectedOption} onValueChange={setSelectedOption}>
-              <div className="space-y-3">
-                {poll.options.map((option, index) => (
-                  <Label
-                    key={option.id}
-                    className={`flex items-center p-4 border border-slate-200 rounded-xl cursor-pointer transition-all group ${
-                      optionColors[index]?.hoverBg || 'hover:bg-slate-50'
-                    } ${
-                      selectedOption === option.id 
-                        ? `${optionColors[index]?.borderColor || 'border-slate-300'} ${optionColors[index]?.hoverBg || 'bg-slate-50'}` 
-                        : ''
-                    }`}
-                    htmlFor={`option-${option.id}`}
-                  >
-                    <RadioGroupItem 
-                      value={option.id} 
-                      id={`option-${option.id}`}
-                      className={`w-5 h-5 ${optionColors[index]?.focusRing || 'focus:ring-slate-500'}`}
-                    />
-                    <div className="ml-4 flex items-center space-x-3">
-                      <div className={`w-8 h-8 ${optionColors[index]?.bg || 'bg-slate-500'} rounded-lg flex items-center justify-center text-white text-sm font-medium group-hover:opacity-80 transition-opacity`}>
-                        {option.id}
+          {!hasSubmitted ? (
+            <form onSubmit={handleSubmit}>
+              <RadioGroup value={selectedOption} onValueChange={setSelectedOption}>
+                <div className="space-y-3">
+                  {poll.options.map((option, index) => (
+                    <Label
+                      key={option.id}
+                      className={`flex items-center p-4 border border-slate-200 rounded-xl cursor-pointer transition-all group ${
+                        optionColors[index]?.hoverBg || 'hover:bg-slate-50'
+                      } ${
+                        selectedOption === option.id 
+                          ? `${optionColors[index]?.borderColor || 'border-slate-300'} ${optionColors[index]?.hoverBg || 'bg-slate-50'}` 
+                          : ''
+                      }`}
+                      htmlFor={`option-${option.id}`}
+                    >
+                      <RadioGroupItem 
+                        value={option.id} 
+                        id={`option-${option.id}`}
+                        className={`w-5 h-5 ${optionColors[index]?.focusRing || 'focus:ring-slate-500'}`}
+                      />
+                      <div className="ml-4 flex items-center space-x-3">
+                        <div className={`w-8 h-8 ${optionColors[index]?.bg || 'bg-slate-500'} rounded-lg flex items-center justify-center text-white text-sm font-medium group-hover:opacity-80 transition-opacity`}>
+                          {option.id}
+                        </div>
+                        <span className="text-slate-700 font-medium">{option.text}</span>
                       </div>
-                      <span className="text-slate-700 font-medium">{option.text}</span>
-                    </div>
-                  </Label>
-                ))}
-              </div>
-            </RadioGroup>
+                    </Label>
+                  ))}
+                </div>
+              </RadioGroup>
 
-            <Button 
-              type="submit" 
-              className="w-full mt-6" 
-              disabled={!selectedOption || timeLeft === 0}
-            >
-              Submit
-            </Button>
-          </form>
+              <Button 
+                type="submit" 
+                className="w-full mt-6" 
+                disabled={!selectedOption || timeLeft === 0}
+              >
+                Submit
+              </Button>
+            </form>
+          ) : (
+            <div className="space-y-6">
+              {/* Live Results with Percentages */}
+              <div className="space-y-4">
+                {poll.options.map((option, index) => {
+                  const result = pollResults?.results.find(r => r.id === option.id);
+                  const percentage = result?.percentage || 0;
+                  
+                  return (
+                    <div key={option.id} className="p-4 border border-slate-200 rounded-xl bg-slate-50">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-8 h-8 ${optionColors[index]?.bg || 'bg-slate-500'} rounded-lg flex items-center justify-center text-white text-sm font-medium`}>
+                            {option.id}
+                          </div>
+                          <span className="text-slate-700 font-medium">{option.text}</span>
+                        </div>
+                        <span className="text-sm font-medium text-slate-900">
+                          {percentage}%
+                        </span>
+                      </div>
+                      <div className="relative h-3 w-full overflow-hidden rounded-full bg-slate-200">
+                        <div 
+                          className={`h-full transition-all duration-500 ${optionColors[index]?.bg || 'bg-slate-500'}`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Wait Message */}
+              <div className="text-center py-6 bg-blue-50 rounded-xl border border-blue-200">
+                <div className="text-blue-800 font-medium mb-2">
+                  Answer submitted successfully!
+                </div>
+                <div className="text-blue-600 text-sm">
+                  Wait for the teacher to ask a new question...
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

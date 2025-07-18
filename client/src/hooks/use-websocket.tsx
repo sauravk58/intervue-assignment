@@ -44,6 +44,8 @@ export function useWebSocket(userRole: "teacher" | "student" | null, studentName
   const [activeSessions, setActiveSessions] = useState<Session[]>([]);
   const [responseCount, setResponseCount] = useState(0);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [isKicked, setIsKicked] = useState(false);
   const { toast } = useToast();
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -82,6 +84,7 @@ export function useWebSocket(userRole: "teacher" | "student" | null, studentName
               setActivePoll(data.poll);
               setPollResults(null);
               setResponseCount(0);
+              setHasSubmitted(false);
               if (userRole === 'student') {
                 toast({
                   title: "New Poll Started",
@@ -100,6 +103,7 @@ export function useWebSocket(userRole: "teacher" | "student" | null, studentName
               break;
               
             case 'responseSubmitted':
+              setHasSubmitted(true);
               toast({
                 title: "Answer Submitted",
                 description: "Your response has been recorded",
@@ -123,6 +127,22 @@ export function useWebSocket(userRole: "teacher" | "student" | null, studentName
                 role: data.role
               };
               setChatMessages(prev => [...prev, newMessage]);
+              break;
+              
+            case 'kicked':
+              if (userRole === 'student') {
+                setIsKicked(true);
+                toast({
+                  title: "You have been removed",
+                  description: "The teacher has removed you from the session.",
+                  variant: "destructive",
+                });
+              }
+              break;
+              
+            case 'liveResults':
+              setPollResults(data.results);
+              setResponseCount(data.results.totalResponses);
               break;
           }
         } catch (error) {
@@ -167,6 +187,34 @@ export function useWebSocket(userRole: "teacher" | "student" | null, studentName
     }
   };
 
+  const sendChatMessage = (message: string) => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({
+        type: 'chatMessage',
+        message: message,
+        sender: userRole === 'teacher' ? 'Teacher' : studentName,
+        role: userRole
+      }));
+    }
+  };
+
+  const kickParticipant = (participantName: string) => {
+    if (socket && socket.readyState === WebSocket.OPEN && userRole === 'teacher') {
+      socket.send(JSON.stringify({
+        type: 'kickParticipant',
+        studentName: participantName
+      }));
+    }
+  };
+
+  const rejoinSession = () => {
+    setIsKicked(false);
+    // Reconnect the WebSocket
+    if (socket) {
+      socket.close();
+    }
+  };
+
   return {
     isConnected,
     activePoll,
@@ -174,6 +222,11 @@ export function useWebSocket(userRole: "teacher" | "student" | null, studentName
     activeSessions,
     responseCount,
     chatMessages,
+    hasSubmitted,
+    isKicked,
     sendMessage,
+    sendChatMessage,
+    kickParticipant,
+    rejoinSession,
   };
 }

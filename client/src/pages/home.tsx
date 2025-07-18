@@ -7,7 +7,9 @@ import TeacherPollCreation from "@/components/teacher-poll-creation";
 import ActivePollStudent from "@/components/active-poll-student";
 import LiveResults from "@/components/live-results";
 import PollHistory from "@/components/poll-history";
-import FloatingChat from "@/components/floating-chat";
+import { EnhancedChat } from "@/components/enhanced-chat";
+import { TeacherLiveMonitoring } from "@/components/teacher-live-monitoring";
+import { KickedParticipant } from "@/components/kicked-participant";
 import { useWebSocket } from "@/hooks/use-websocket";
 
 export type ViewType = 
@@ -17,12 +19,14 @@ export type ViewType =
   | "teacherPollCreation"
   | "activePollStudent"
   | "liveResults"
-  | "pollHistory";
+  | "pollHistory"
+  | "teacherLiveMonitoring";
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<ViewType>("roleSelection");
   const [userRole, setUserRole] = useState<"teacher" | "student" | null>(null);
   const [studentName, setStudentName] = useState("");
+  const [isChatOpen, setIsChatOpen] = useState(false);
   
   const { 
     isConnected, 
@@ -31,7 +35,12 @@ export default function Home() {
     activeSessions,
     responseCount,
     chatMessages,
-    sendMessage 
+    hasSubmitted,
+    isKicked,
+    sendMessage,
+    sendChatMessage,
+    kickParticipant,
+    rejoinSession
   } = useWebSocket(userRole, studentName);
 
   const handleRoleSelect = (role: "teacher" | "student") => {
@@ -47,6 +56,15 @@ export default function Home() {
     setStudentName(name);
     setCurrentView("studentWaitingRoom");
   };
+
+  // Handle kicked students - check after hooks are called
+  if (isKicked && userRole === 'student') {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <KickedParticipant onRejoin={rejoinSession} />
+      </div>
+    );
+  }
 
   const renderCurrentView = () => {
     switch (currentView) {
@@ -65,7 +83,7 @@ export default function Home() {
       case "teacherPollCreation":
         return (
           <TeacherPollCreation 
-            onPollCreated={() => setCurrentView("liveResults")}
+            onPollCreated={() => setCurrentView("teacherLiveMonitoring")}
             sendMessage={sendMessage}
             activeSessions={activeSessions}
             onViewHistory={() => setCurrentView("pollHistory")}
@@ -75,13 +93,25 @@ export default function Home() {
         return (
           <ActivePollStudent 
             poll={activePoll}
+            pollResults={pollResults}
+            hasSubmitted={hasSubmitted}
             onSubmit={(selectedOption) => {
               sendMessage({
                 type: 'submitResponse',
                 selectedOption
               });
-              setCurrentView("liveResults");
             }}
+          />
+        );
+      case "teacherLiveMonitoring":
+        return (
+          <TeacherLiveMonitoring 
+            pollResults={pollResults}
+            activeSessions={activeSessions}
+            totalResponses={responseCount}
+            onCreateNewPoll={() => setCurrentView("teacherPollCreation")}
+            onViewHistory={() => setCurrentView("pollHistory")}
+            onToggleChat={() => setIsChatOpen(!isChatOpen)}
           />
         );
       case "liveResults":
@@ -135,13 +165,19 @@ export default function Home() {
         {renderCurrentView()}
       </main>
 
-      {/* Floating Chat */}
-      <FloatingChat 
-        userRole={userRole} 
-        userName={userRole === "teacher" ? "Teacher" : studentName} 
-        sendMessage={sendMessage}
-        messages={chatMessages}
-      />
+      {/* Enhanced Chat */}
+      {userRole && (
+        <EnhancedChat 
+          messages={chatMessages}
+          participants={activeSessions}
+          userRole={userRole}
+          studentName={studentName}
+          onSendMessage={sendChatMessage}
+          onKickParticipant={kickParticipant}
+          isOpen={isChatOpen}
+          onToggle={() => setIsChatOpen(!isChatOpen)}
+        />
+      )}
     </div>
   );
 }

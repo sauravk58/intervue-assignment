@@ -135,6 +135,15 @@ export class MemStorage implements IStorage {
       this.sessions.set(session.id, updatedSession);
     }
   }
+
+  async deactivateSession(studentName: string): Promise<void> {
+    const session = Array.from(this.sessions.values()).find(
+      s => s.studentName === studentName
+    );
+    if (session) {
+      this.sessions.delete(session.id);
+    }
+  }
 }
 
 export const storage = new MemStorage();

@@ -149,17 +149,18 @@ export default function TeacherPollCreation({
                 Enter your question
               </Label>
               <div className="relative mt-2">
-                <Input
+                <textarea
                   id="question"
-                  type="text"
                   placeholder="Type your question here..."
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  maxLength={200}
+                  maxLength={500}
                   required
+                  className="w-full min-h-[120px] p-3 border border-gray-300 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={4}
                 />
-                <div className="absolute right-3 top-3 text-xs text-slate-400">
-                  {question.length}/200
+                <div className="absolute right-3 bottom-3 text-xs text-slate-400">
+                  {question.length}/500
                 </div>
               </div>
             </div>

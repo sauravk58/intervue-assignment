@@ -91,11 +91,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   type: 'responseSubmitted'
                 }));
                 
-                // Broadcast updated response count to teacher
+                // Calculate and broadcast live results
                 const responses = await storage.getResponsesByPollId(activePoll.id);
-                broadcastToTeachers({
-                  type: 'responseUpdate',
-                  responseCount: responses.length
+                const results = calculateResults(activePoll, responses);
+                
+                broadcastToAll({
+                  type: 'liveResults',
+                  results: results
                 });
               }
             }
@@ -126,6 +128,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
               role: data.role,
               timestamp: data.timestamp
             });
+            break;
+            
+          case 'kickParticipant':
+            if (ws.role === 'teacher') {
+              // Find and kick the participant
+              const studentToKick = Array.from(clients).find(client => 
+                client.role === 'student' && client.studentName === data.studentName
+              );
+              
+              if (studentToKick) {
+                studentToKick.send(JSON.stringify({
+                  type: 'kicked'
+                }));
+                
+                // Remove from active sessions
+                await storage.deactivateSession(data.studentName);
+                broadcastActiveSessions();
+              }
+            }
             break;
         }
       } catch (error) {
