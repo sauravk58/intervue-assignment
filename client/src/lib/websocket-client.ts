@@ -5,7 +5,7 @@ export class WebSocketClient {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
   
-  constructor(url: string) {
+  constructor(url: string = import.meta.env.VITE_WS_URL) {
     this.url = url;
   }
 

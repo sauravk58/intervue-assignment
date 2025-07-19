@@ -53,9 +53,7 @@ export function useWebSocket(userRole: "teacher" | "student" | null, studentName
     if (!userRole) return;
 
     const connect = () => {
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
-      
+      const wsUrl = import.meta.env.VITE_WS_URL;
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
